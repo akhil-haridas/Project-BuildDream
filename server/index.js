@@ -14,7 +14,7 @@ app.use(
     origin: ["http://localhost:3000"],
     methods: ["GET", "POST"],
     credentials: true,
-    allowedHeaders: ["Content-Type", "Access"],
+    allowedHeaders: ["Content-Type", "Access-Control-Allow-Headers"],
   })
 );
 
@@ -28,8 +28,7 @@ mongoose
   });
 
 app.use("/", clientRouter);
-// app.use("/admin", adminrouter);
-// app.use("/uploads", express.static("./uploads"));
+app.use("/uploads", express.static("./uploads"));
 
 const PORT = process.env.PORT || 4000;
 

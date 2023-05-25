@@ -5,7 +5,7 @@ const multer = require("multer");
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "uploads/");
+    cb(null, "uploads/clients");
   },
   filename: function (req, file, cb) {
     cb(null, Date.now() + "-" + file.originalname);
@@ -13,7 +13,7 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-  // Only accept jpeg, jpg, png image files
+
   if (
     file.mimetype === "image/jpeg" ||
     file.mimetype === "image/jpg" ||
@@ -30,6 +30,8 @@ const upload = multer({
   fileFilter: fileFilter,
 });
 
-router.post("/signup", clientController.Signup);
+router.post("/signup", upload.single('image'), clientController.Signup);
+
+router.post('/login',clientController.Login)
 
 module.exports = router;

@@ -1,7 +1,6 @@
-const User = require('../models/clientModel')
+const User = require("../models/clientModel");
 const bcrypt = require("bcrypt");
-
-
+const jwt = require("jsonwebtoken");
 
 //Secure Password
 const securePassword = async (password) => {
@@ -10,7 +9,6 @@ const securePassword = async (password) => {
     return passwordHash;
   } catch (error) {
     console.log(error.message);
-    // Handle the error appropriately (e.g., throw an error, return a default value, etc.)
     throw new Error("Error while hashing password");
   }
 };
@@ -18,18 +16,17 @@ const securePassword = async (password) => {
 //client Signup
 
 exports.Signup = async (req, res) => {
-    console.log('post signup ethitto');
-  const { userName, mobile, password, image } = req.body;
-  
-  console.log(req.body,"body")
-
   try {
+    const { userName, mobile, password,role } = req.body;
+    const image = req.file;
+    
     let user = await User.findOne({ mobile: mobile });
 
     if (user) {
       return res.json({
         Status: false,
-        message: 'Email already exists. Try logging in with this email.',
+        message:
+          "Mobile Number Already exists. Try logging in with this Mobile Number.",
       });
     }
 
@@ -39,16 +36,69 @@ exports.Signup = async (req, res) => {
       name: userName,
       mobile: mobile,
       password: hashedPassword,
-      image: image,
-      role: "client"
+      image: image.filename,
+      role: role,
     });
 
     res.json({
-      Status: true,
+      status: true,
       message: null,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).send('Server Error');
+    res.status(500).send("Server Error");
+  }
+};
+
+// client Login
+
+exports.Login = async (req, res) => {
+
+  try {
+    const { mobileNumber, password } = req.body;
+
+    const userLOGIN = {
+      status: false,
+      message: null,
+      token: null,
+      name: null,
+    };
+
+    const user = await User.findOne({ mobile: mobileNumber });
+    if (!user) {
+      userLOGIN.message = "Your mobile number is wrong";
+      res.send({ userLOGIN });
+      return;
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (isMatch) {
+      const token = jwt.sign({ id: user._id }, "secretCode", {
+        expiresIn: "30d",
+      });
+      userLOGIN.status = true;
+      userLOGIN.name = user.name;
+      userLOGIN.token = token;
+
+      const obj = {
+        token,
+        name: user.name,
+      };
+
+      res
+        .cookie("jwt", obj, {
+          httpOnly: false,
+          maxAge: 6000 * 1000,
+        })
+        .status(200)
+        .send({ userLOGIN });
+    } else {
+      userLOGIN.message = "Password is wrong";
+      res.send({ userLOGIN });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Server Error");
   }
 };
