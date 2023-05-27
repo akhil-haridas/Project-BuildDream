@@ -32,6 +32,10 @@ const upload = multer({
 
 router.post("/signup", upload.single('image'), clientController.Signup);
 
-router.post('/login',clientController.Login)
+router.post('/login', clientController.Login)
+
+router.get('/myaccount',clientController.MyAccount)
+
+router.post('/resetpass',clientController.Resetpass)
 
 module.exports = router;

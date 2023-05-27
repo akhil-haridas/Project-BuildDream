@@ -17,9 +17,9 @@ const securePassword = async (password) => {
 
 exports.Signup = async (req, res) => {
   try {
-    const { userName, mobile, password,role } = req.body;
+    const { userName, mobile, password, role } = req.body;
     const image = req.file;
-    
+
     let user = await User.findOne({ mobile: mobile });
 
     if (user) {
@@ -53,7 +53,6 @@ exports.Signup = async (req, res) => {
 // client Login
 
 exports.Login = async (req, res) => {
-
   try {
     const { mobileNumber, password } = req.body;
 
@@ -97,6 +96,61 @@ exports.Login = async (req, res) => {
       userLOGIN.message = "Password is wrong";
       res.send({ userLOGIN });
     }
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Server Error");
+  }
+};
+
+//My Acccount
+
+exports.MyAccount = async (req, res) => {
+
+  if (req.cookies.jwt && req.cookies.jwt.token) {
+    try {
+      const jwtToken = jwt.verify(req.cookies.jwt.token, "secretCode");
+      const user = await User.findOne({ _id: jwtToken.id });
+      if (user) {
+        res.status(200).send({ user });
+      } else {
+        res.status(500).send({ error: "User not found" });
+      }
+    } catch (err) {
+      res.status(401).send({ error: "Invalid JWT token" });
+    }
+  } else {
+    res.status(401).send({ error: "JWT token not found in cookies" });
+  }
+};
+
+
+//Reset Password
+
+exports.Resetpass = async (req, res) => {
+  try {
+    const { newpass, mobile } = req.body;
+
+    const userRESET = {
+      status: false,
+      message: null,
+    };
+
+    const user = await User.findOne({ mobile: mobile });
+    if (!user) {
+      userLOGIN.message = "You are no longer a member";
+      res.send({ userRESET });
+      return;
+    }
+
+    const password = await securePassword(newpass);
+
+    user.password = password
+
+    const updatedUser = await user.save(); 
+
+    userRESET.status = true;
+    userRESET.message = "Password reset successful";
+    res.send({ userRESET });
   } catch (error) {
     console.log(error);
     res.status(500).send("Server Error");

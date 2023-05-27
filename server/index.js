@@ -1,6 +1,7 @@
 const express = require("express");
 const CORS = require("cors");
 const app = express();
+const path = require("path");
 
 // const adminrouter = require("./routes/admin");
 const clientRouter = require("./routes/clientRoutes");
@@ -28,7 +29,7 @@ mongoose
   });
 
 app.use("/", clientRouter);
-app.use("/uploads", express.static("./uploads"));
+app.use("/uploads", express.static(path.join(__dirname, "uploads", "clients")));
 
 const PORT = process.env.PORT || 4000;
 
