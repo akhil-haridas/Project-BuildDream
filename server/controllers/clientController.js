@@ -1,4 +1,6 @@
 const User = require("../models/clientModel");
+const Professional = require("../models/professionalModel");
+const Shop = require("../models/shopModel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
@@ -21,7 +23,6 @@ exports.Signup = async (req, res) => {
     const image = req.file;
 
     let user = await User.findOne({ mobile: mobile });
-
     if (user) {
       return res.json({
         Status: false,
@@ -61,40 +62,103 @@ exports.Login = async (req, res) => {
       message: null,
       token: null,
       name: null,
+      role:null
     };
 
     const user = await User.findOne({ mobile: mobileNumber });
-    if (!user) {
+    const professional = await Professional.findOne({ mobile: mobileNumber });
+    const shop = await Shop.findOne({ mobile: mobileNumber });
+    if (!user && !professional && !shop) {
       userLOGIN.message = "Your mobile number is wrong";
       res.send({ userLOGIN });
       return;
-    }
+    } else if (user) {
+      const isMatch = await bcrypt.compare(password, user.password);
 
-    const isMatch = await bcrypt.compare(password, user.password);
+      if (isMatch) {
+        const token = jwt.sign({ id: user._id }, "secretCode", {
+          expiresIn: "30d",
+        });
+        userLOGIN.status = true;
+        userLOGIN.name = user.name;
+        userLOGIN.token = token;
+        userLOGIN.role = user.role
 
-    if (isMatch) {
-      const token = jwt.sign({ id: user._id }, "secretCode", {
-        expiresIn: "30d",
-      });
-      userLOGIN.status = true;
-      userLOGIN.name = user.name;
-      userLOGIN.token = token;
+        const obj = {
+          token,
+          name: user.name,
+          role:user.role
+        };
 
-      const obj = {
-        token,
-        name: user.name,
-      };
+        res
+          .cookie("jwt", obj, {
+            httpOnly: false,
+            maxAge: 6000 * 1000,
+          })
+          .status(200)
+          .send({ userLOGIN });
+      } else {
+        userLOGIN.message = "Password is wrong";
+        res.send({ userLOGIN });
+      }
+    } else if (!user && !shop && professional) {
+            const isMatch = await bcrypt.compare(password, professional.password);
 
-      res
-        .cookie("jwt", obj, {
-          httpOnly: false,
-          maxAge: 6000 * 1000,
-        })
-        .status(200)
-        .send({ userLOGIN });
-    } else {
-      userLOGIN.message = "Password is wrong";
-      res.send({ userLOGIN });
+            if (isMatch) {
+              const token = jwt.sign({ id: professional._id }, "secretCode", {
+                expiresIn: "30d",
+              });
+              userLOGIN.status = true;
+              userLOGIN.name = professional.name;
+              userLOGIN.token = token;
+              userLOGIN.role = professional.role;
+
+              const obj = {
+                token,
+                name: professional.name,
+                role:professional.role
+              };
+
+              res
+                .cookie("jwt", obj, {
+                  httpOnly: false,
+                  maxAge: 6000 * 1000,
+                })
+                .status(200)
+                .send({ userLOGIN });
+            } else {
+              userLOGIN.message = "Password is wrong";
+              res.send({ userLOGIN });
+            }
+    } else if(!user && !professional && shop) {
+            const isMatch = await bcrypt.compare(password, shop.password);
+
+            if (isMatch) {
+              const token = jwt.sign({ id: shop._id }, "secretCode", {
+                expiresIn: "30d",
+              });
+              userLOGIN.status = true;
+              userLOGIN.name = shop.name;
+              userLOGIN.token = token;
+              userLOGIN.role = shop.role;
+
+              const obj = {
+                token,
+                name: shop.name,
+                role:shop.role
+              };
+
+              res
+                .cookie("jwt", obj, {
+                  httpOnly: false,
+                  maxAge: 6000 * 1000,
+                })
+                .status(200)
+                .send({ userLOGIN });
+            } else {
+              userLOGIN.message = "Password is wrong";
+              res.send({ userLOGIN });
+            }
     }
   } catch (error) {
     console.log(error);
@@ -105,7 +169,6 @@ exports.Login = async (req, res) => {
 //My Acccount
 
 exports.MyAccount = async (req, res) => {
-
   if (req.cookies.jwt && req.cookies.jwt.token) {
     try {
       const jwtToken = jwt.verify(req.cookies.jwt.token, "secretCode");
@@ -122,7 +185,6 @@ exports.MyAccount = async (req, res) => {
     res.status(401).send({ error: "JWT token not found in cookies" });
   }
 };
-
 
 //Reset Password
 
@@ -144,9 +206,9 @@ exports.Resetpass = async (req, res) => {
 
     const password = await securePassword(newpass);
 
-    user.password = password
+    user.password = password;
 
-    const updatedUser = await user.save(); 
+    const updatedUser = await user.save();
 
     userRESET.status = true;
     userRESET.message = "Password reset successful";

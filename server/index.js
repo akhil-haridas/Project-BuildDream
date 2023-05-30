@@ -3,10 +3,14 @@ const CORS = require("cors");
 const app = express();
 const path = require("path");
 
-// const adminrouter = require("./routes/admin");
-const clientRouter = require("./routes/clientRoutes");
 const cookieParser = require("cookie-parser");
 const mongoose = require("mongoose");
+
+
+const clientRouter = require("./routes/clientRoutes");
+const professionalRouter = require("./routes/professionalRoutes");
+const shopRouter = require("./routes/shopRoutes");
+
 
 app.use(express.json());
 app.use(cookieParser());
@@ -29,6 +33,9 @@ mongoose
   });
 
 app.use("/", clientRouter);
+app.use("/professional", professionalRouter)
+app.use("/shop", shopRouter)
+
 app.use("/uploads", express.static(path.join(__dirname, "uploads", "clients")));
 
 const PORT = process.env.PORT || 4000;
