@@ -23,7 +23,23 @@ exports.Signup = async (req, res) => {
     const image = req.file;
 
     let user = await User.findOne({ mobile: mobile });
-    if (user) {
+    const professional = await Professional.findOne({ mobile: mobile });
+    const shop = await Shop.findOne({ mobile: mobile });
+    if (user || professional || shop) {
+      if (professional) {
+        return res.json({
+          Status: false,
+          message:
+            "You have already have a professional account using this number.",
+        });
+      }
+      if (shop) {
+         return res.json({
+           Status: false,
+           message:
+             "You have already have a shop account using this number.",
+         });
+      }
       return res.json({
         Status: false,
         message:
@@ -62,17 +78,19 @@ exports.Login = async (req, res) => {
       message: null,
       token: null,
       name: null,
-      role:null
+      role: null,
     };
 
     const user = await User.findOne({ mobile: mobileNumber });
     const professional = await Professional.findOne({ mobile: mobileNumber });
     const shop = await Shop.findOne({ mobile: mobileNumber });
-    if (!user && !professional && !shop) {
+    if (!user) {
       userLOGIN.message = "Your mobile number is wrong";
       res.send({ userLOGIN });
       return;
-    } else if (user) {
+    }
+
+    if (user) {
       const isMatch = await bcrypt.compare(password, user.password);
 
       if (isMatch) {
@@ -82,12 +100,12 @@ exports.Login = async (req, res) => {
         userLOGIN.status = true;
         userLOGIN.name = user.name;
         userLOGIN.token = token;
-        userLOGIN.role = user.role
+        userLOGIN.role = user.role;
 
         const obj = {
           token,
           name: user.name,
-          role:user.role
+          role: user.role,
         };
 
         res
@@ -101,64 +119,6 @@ exports.Login = async (req, res) => {
         userLOGIN.message = "Password is wrong";
         res.send({ userLOGIN });
       }
-    } else if (!user && !shop && professional) {
-            const isMatch = await bcrypt.compare(password, professional.password);
-
-            if (isMatch) {
-              const token = jwt.sign({ id: professional._id }, "secretCode", {
-                expiresIn: "30d",
-              });
-              userLOGIN.status = true;
-              userLOGIN.name = professional.name;
-              userLOGIN.token = token;
-              userLOGIN.role = professional.role;
-
-              const obj = {
-                token,
-                name: professional.name,
-                role:professional.role
-              };
-
-              res
-                .cookie("jwt", obj, {
-                  httpOnly: false,
-                  maxAge: 6000 * 1000,
-                })
-                .status(200)
-                .send({ userLOGIN });
-            } else {
-              userLOGIN.message = "Password is wrong";
-              res.send({ userLOGIN });
-            }
-    } else if(!user && !professional && shop) {
-            const isMatch = await bcrypt.compare(password, shop.password);
-
-            if (isMatch) {
-              const token = jwt.sign({ id: shop._id }, "secretCode", {
-                expiresIn: "30d",
-              });
-              userLOGIN.status = true;
-              userLOGIN.name = shop.name;
-              userLOGIN.token = token;
-              userLOGIN.role = shop.role;
-
-              const obj = {
-                token,
-                name: shop.name,
-                role:shop.role
-              };
-
-              res
-                .cookie("jwt", obj, {
-                  httpOnly: false,
-                  maxAge: 6000 * 1000,
-                })
-                .status(200)
-                .send({ userLOGIN });
-            } else {
-              userLOGIN.message = "Password is wrong";
-              res.send({ userLOGIN });
-            }
     }
   } catch (error) {
     console.log(error);

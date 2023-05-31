@@ -6,11 +6,10 @@ const path = require("path");
 const cookieParser = require("cookie-parser");
 const mongoose = require("mongoose");
 
-
 const clientRouter = require("./routes/clientRoutes");
 const professionalRouter = require("./routes/professionalRoutes");
 const shopRouter = require("./routes/shopRoutes");
-
+const adminRouter = require("./routes/adminRoutes");
 
 app.use(express.json());
 app.use(cookieParser());
@@ -33,8 +32,9 @@ mongoose
   });
 
 app.use("/", clientRouter);
-app.use("/professional", professionalRouter)
-app.use("/shop", shopRouter)
+app.use("/professional", professionalRouter);
+app.use("/shop", shopRouter);
+app.use("/admin", adminRouter);
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads", "clients")));
 
