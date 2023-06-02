@@ -91,3 +91,63 @@ exports.Signup = async (req, res) => {
     res.status(500).send("Server Error");
   }
 };
+
+exports.Login = async (req, res) => {
+  try {
+    const { mobileNumber, password } = req.body;
+
+    const userLOGIN = {
+      status: false,
+      message: null,
+      token: null,
+      name: null,
+      role: null,
+    };
+
+    const professional = await Shop.findOne({ mobile: mobileNumber });
+    if (!professional) {
+      userLOGIN.message = "Your mobile number is wrong";
+      res.send({ userLOGIN });
+      return;
+    }
+
+    if (professional) {
+      if (!professional.status) {
+        userLOGIN.message = "Your account is not approved,wait please!";
+        res.send({ userLOGIN });
+        return;
+      }
+      const isMatch = await bcrypt.compare(password, professional.password);
+
+      if (isMatch) {
+        const token = jwt.sign({ id: professional._id }, "secretCode", {
+          expiresIn: "30d",
+        });
+        userLOGIN.status = true;
+        userLOGIN.name = professional.name;
+        userLOGIN.token = token;
+        userLOGIN.role = professional.role;
+
+        const obj = {
+          token,
+          name: professional.name,
+          role: professional.role,
+        };
+
+        res
+          .cookie("jwt", obj, {
+            httpOnly: false,
+            maxAge: 6000 * 1000,
+          })
+          .status(200)
+          .send({ userLOGIN });
+      } else {
+        userLOGIN.message = "Password is wrong";
+        res.send({ userLOGIN });
+      }
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Server Error");
+  }
+};
