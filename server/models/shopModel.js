@@ -3,6 +3,17 @@ const mongoose = require("mongoose");
 
 const Schema = mongoose.Schema;
 
+const productsSchema = new Schema({
+  name: {
+    type:String
+  },
+  price: {
+    type:String
+  },
+  image: {
+    type:String
+  }
+});
 const addressSchema = new Schema({
   street: {
     type: String,
@@ -62,6 +73,7 @@ const shopSchema = new Schema(
     status: {
       type: Boolean,
     },
+    products: [productsSchema],
     address: [addressSchema],
   },
   {

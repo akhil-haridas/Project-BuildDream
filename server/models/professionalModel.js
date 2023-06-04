@@ -3,6 +3,17 @@ const mongoose = require("mongoose");
 
 const Schema = mongoose.Schema;
 
+const worksSchema = new Schema({
+  title: {
+    type:String
+  },
+  image: {
+    type:String
+  },
+  description: {
+    type:String
+  }
+})
 const addressSchema = new Schema({
   street: {
     type: String,
@@ -63,6 +74,7 @@ const professionalSchema = new Schema(
         type:Boolean
     },
     address: [addressSchema],
+    works:[worksSchema]
   },
   {
     timestamps: true,

@@ -151,3 +151,32 @@ exports.Login = async (req, res) => {
     res.status(500).send("Server Error");
   }
 };
+
+
+exports.addProduct = async (req, res) => {
+  try {
+    const jwtToken = jwt.verify(req.cookies.jwt.token, "secretCode");
+    console.log(jwtToken)
+   const { name, price } = req.body;
+   const image = req.file;
+
+   const shopId = jwtToken.id
+
+   const product = {
+     name,
+     price,
+     image: image.filename,
+   };
+
+   // Find the shop by ID and update the products array
+   const updatedShop = await Shop.findByIdAndUpdate(
+     shopId,
+     { $push: { products: product } },
+     { new: true }
+   );
+
+    res.status(200).send({ added: true });
+ } catch (error) {
+   res.status(500).json({ error: "Internal server error" });
+ }
+}

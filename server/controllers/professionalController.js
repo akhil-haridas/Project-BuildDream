@@ -168,3 +168,33 @@ exports.Login = async (req, res) => {
     res.status(500).send("Server Error");
   }
 };
+
+
+exports.addWork = async (req, res) => {
+    try {
+      const jwtToken = jwt.verify(req.cookies.jwt.token, "secretCode");
+      console.log(jwtToken,'hey');
+      const { title, description } = req.body;
+      const image = req.file;
+
+      const proId = jwtToken.id;
+
+      const work = {
+        title,
+        image: image.filename,
+        description
+      };
+      console.log(work,'work')
+
+      // Find the shop by ID and update the products array
+      const updatedProfessional = await Professional.findByIdAndUpdate(
+        proId,
+        { $push: { works: work } },
+        { new: true }
+      );
+console.log(updatedProfessional)
+      res.status(200).send({ added: true });
+    } catch (error) {
+      res.status(500).json({ error: "Internal server error" });
+    }
+}

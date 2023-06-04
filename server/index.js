@@ -36,7 +36,7 @@ app.use("/professional", professionalRouter);
 app.use("/shop", shopRouter);
 app.use("/admin", adminRouter);
 
-app.use("/uploads", express.static(path.join(__dirname, "uploads", "clients")));
+app.use("/uploads", express.static("./uploads"));
 
 const PORT = process.env.PORT || 4000;
 

@@ -5,7 +5,7 @@ const multer = require("multer");
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "uploads/clients");
+    cb(null, "uploads");
   },
   filename: function (req, file, cb) {
     cb(null, Date.now() + "-" + file.originalname);
@@ -36,6 +36,14 @@ router.post('/login', clientController.Login)
 
 router.get('/myaccount',clientController.MyAccount)
 
-router.post('/resetpass',clientController.Resetpass)
+router.post('/resetpass', clientController.Resetpass)
+
+router.get('/professionals', clientController.GetProfessionals)
+
+router.get("/professional?:id", clientController.GetProfessional);
+
+router.get("/shops", clientController.GetShops);
+
+router.get("/shop?:id", clientController.GetShop);
 
 module.exports = router;

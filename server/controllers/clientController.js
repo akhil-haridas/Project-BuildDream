@@ -34,11 +34,10 @@ exports.Signup = async (req, res) => {
         });
       }
       if (shop) {
-         return res.json({
-           Status: false,
-           message:
-             "You have already have a shop account using this number.",
-         });
+        return res.json({
+          Status: false,
+          message: "You have already have a shop account using this number.",
+        });
       }
       return res.json({
         Status: false,
@@ -176,5 +175,45 @@ exports.Resetpass = async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).send("Server Error");
+  }
+};
+
+exports.GetProfessionals = async (req, res) => {
+  try {
+    const DATA = await Professional.find({ status: true });
+    res.send({ DATA });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+exports.GetProfessional = async (req, res) => {
+  try {
+    const id = req.query.id;
+    const DATA = await Professional.findById({ _id: id })
+    res.send({DATA})
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+
+exports.GetShops = async (req, res) => {
+  try {
+    const DATA = await Shop.find({ status: true });
+    console.log(DATA,'datas')
+    res.send({ DATA });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+exports.GetShop = async (req, res) => {
+  try {
+    const id = req.query.id;
+    const DATA = await Shop.findById({ _id: id });
+    res.send({ DATA });
+  } catch (error) {
+    console.log(error);
   }
 };
