@@ -46,4 +46,6 @@ router.get("/shops", clientController.GetShops);
 
 router.get("/shop?:id", clientController.GetShop);
 
+router.get("/getcategories",clientController.getCategories);
+
 module.exports = router;

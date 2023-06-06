@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const Professional = require("../models/professionalModel");
 const Shop = require("../models/shopModel");
+const Category = require("../models/categoryModel")
 const nodemailer = require("nodemailer");
 const twilio = require("twilio");
 
@@ -256,3 +257,54 @@ exports.denyUser = async (req, res) => {
 
   return res.status(404).send({ message: "Document not found" });
 };
+
+exports.addCategory = async (req, res) => {
+  try {
+    const { category, role } = req.body;
+    const image = req.file;
+    const unique = await Category.findOne({ name: { $regex: category, $options: 'i' } })
+
+    if (!unique) {
+      await Category.create({
+        name: category,
+        image: image.filename,
+        role: role,
+       });
+          res.json({
+            status: true,
+            message: null,
+          });
+    } else {
+      res.json({
+        Status: false,
+        message:
+          "Category already exist",
+      });
+    }
+     
+    
+  } catch (error) {
+    console.log(error)
+  }
+};
+
+
+exports.getCategories = async (req, res) => {
+  try {
+    const categoryDATA = await Category.find({})
+    
+    res.send({ categoryDATA });
+  } catch (error) {
+    console.log(error.message)
+  }
+}
+
+exports.removeCategory = async (req, res) => {
+  try {
+    const categoryID = req.params.id;
+    const deleteData = await Category.deleteOne({ _id: categoryID });
+    return res.status(200).send({ message: "category deleted successfully" });
+  } catch (error) {
+    console.log(error)
+  }
+}

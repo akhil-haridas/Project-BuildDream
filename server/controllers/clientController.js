@@ -1,6 +1,7 @@
 const User = require("../models/clientModel");
 const Professional = require("../models/professionalModel");
 const Shop = require("../models/shopModel");
+const Category = require("../models/categoryModel")
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
@@ -201,7 +202,6 @@ exports.GetProfessional = async (req, res) => {
 exports.GetShops = async (req, res) => {
   try {
     const DATA = await Shop.find({ status: true });
-    console.log(DATA,'datas')
     res.send({ DATA });
   } catch (error) {
     console.log(error);
@@ -217,3 +217,14 @@ exports.GetShop = async (req, res) => {
     console.log(error);
   }
 };
+
+
+exports.getCategories = async (req, res) => {
+  try {
+    const proDATA = await Category.find({ role: "PROFESSIONAL" })
+    const shopDATA = await Category.find({ role: "SHOP" })
+    res.send({proDATA,shopDATA})
+  } catch (error) {
+    
+  }
+}
