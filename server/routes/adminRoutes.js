@@ -32,12 +32,21 @@ const upload = multer({
 
 
 router.post("/login", adminController.Login);
+
 router.get("/permissions", adminController.Permissions)
+
 router.get('/allow-user/:id', adminController.allowUser)
-router.get('/deny-user/:id',adminController.denyUser)
-router.post('/addcategory',upload.single('image'),adminController.addCategory)
-router.get('/getcategories',adminController.getCategories)
+
+router.get('/deny-user/:id', adminController.denyUser)
+
+router.post('/addcategory', upload.single('image'), adminController.addCategory)
+
+router.get('/getcategories', adminController.getCategories)
+
 router.get("/removeCategory/:id", adminController.removeCategory);
 
+router.get("/getclients", adminController.getClients);
+
+router.get("/getclient?:id", adminController.getClient);
 
 module.exports = router;

@@ -5,6 +5,9 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 const twilio = require("twilio");
+const stripe = require("stripe")(
+  "sk_test_51NGJfDSFVO01dJRlhSsvRF5igbmSH8UZtGIpFmUnYMliDhK2cPGyn3l6qofCIxPNmbhDwC4vvAuU57lFJtqu3UGC00H8jnNMtb"
+);
 
 //Secure Password
 const securePassword = async (password) => {
@@ -198,3 +201,47 @@ console.log(updatedProfessional)
       res.status(500).json({ error: "Internal server error" });
     }
 }
+
+
+exports.processPayment = async (req, res) => {
+  try {
+    const { token, amount, currency } = req.body;
+
+    const paymentMethod = await stripe.paymentMethods.create({
+      type: "card",
+      card: {
+        token: token,
+      },
+    });
+
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount,
+      currency,
+      payment_method: paymentMethod.id,
+      confirm: true,
+    });
+
+    if (
+      paymentIntent.status === "requires_action" &&
+      paymentIntent.next_action.type === "use_stripe_sdk"
+    ) {
+      // If 3D Secure authentication is required, redirect the user to the provided URL
+      res.status(200).json({
+        requiresAction: true,
+        paymentIntentId: paymentIntent.id,
+        clientSecret: paymentIntent.client_secret,
+        stripeSdkUrl: paymentIntent.next_action.use_stripe_sdk.stripe_js,
+      });
+    } else if (paymentIntent.status === "succeeded") {
+      res.status(200).json({ message: "Payment succeeded!" });
+    } else {
+      res.status(400).json({ message: "Payment failed!" });
+    }
+  } catch (error) {
+    console.error("Error processing payment:", error);
+    res.status(500).json({ message: "Error processing payment" });
+  }
+};
+
+
+

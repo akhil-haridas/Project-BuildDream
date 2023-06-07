@@ -31,7 +31,12 @@ const upload = multer({
 
 
 router.post("/signup", professionalController.Signup);
+
 router.post("/login",professionalController.Login)
+
 router.post("/addWork", upload.single("image"), professionalController.addWork);
+
+router.post("/process-payment", professionalController.processPayment);
+
 
 module.exports = router;

@@ -2,7 +2,8 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const Professional = require("../models/professionalModel");
 const Shop = require("../models/shopModel");
-const Category = require("../models/categoryModel")
+const Category = require("../models/categoryModel");
+const Clients = require("../models/clientModel");
 const nodemailer = require("nodemailer");
 const twilio = require("twilio");
 
@@ -262,42 +263,40 @@ exports.addCategory = async (req, res) => {
   try {
     const { category, role } = req.body;
     const image = req.file;
-    const unique = await Category.findOne({ name: { $regex: category, $options: 'i' } })
+    const unique = await Category.findOne({
+      name: { $regex: category, $options: "i" },
+    });
 
     if (!unique) {
       await Category.create({
         name: category,
         image: image.filename,
         role: role,
-       });
-          res.json({
-            status: true,
-            message: null,
-          });
+      });
+      res.json({
+        status: true,
+        message: null,
+      });
     } else {
       res.json({
         Status: false,
-        message:
-          "Category already exist",
+        message: "Category already exist",
       });
     }
-     
-    
   } catch (error) {
-    console.log(error)
+    console.log(error);
   }
 };
 
-
 exports.getCategories = async (req, res) => {
   try {
-    const categoryDATA = await Category.find({})
-    
+    const categoryDATA = await Category.find({});
+
     res.send({ categoryDATA });
   } catch (error) {
-    console.log(error.message)
+    console.log(error.message);
   }
-}
+};
 
 exports.removeCategory = async (req, res) => {
   try {
@@ -305,6 +304,26 @@ exports.removeCategory = async (req, res) => {
     const deleteData = await Category.deleteOne({ _id: categoryID });
     return res.status(200).send({ message: "category deleted successfully" });
   } catch (error) {
-    console.log(error)
+    console.log(error);
   }
-}
+};
+
+exports.getClients = async (req, res) => {
+  try {
+    const data = await Clients.find({});
+    console.log(data);
+    res.send({ data });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+exports.getClient = async (req, res) => {
+  try {
+    const clientID = req.query.id;
+    const DATA = await Clients.findById({ _id: clientID });
+    res.send({ DATA });
+  } catch (error) {
+    console.log(error);
+  }
+};
