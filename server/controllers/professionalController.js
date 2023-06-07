@@ -225,7 +225,7 @@ exports.processPayment = async (req, res) => {
       paymentIntent.status === "requires_action" &&
       paymentIntent.next_action.type === "use_stripe_sdk"
     ) {
-      // If 3D Secure authentication is required, redirect the user to the provided URL
+   
       res.status(200).json({
         requiresAction: true,
         paymentIntentId: paymentIntent.id,
