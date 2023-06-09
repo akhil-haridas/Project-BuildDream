@@ -38,5 +38,8 @@ router.post("/addWork", upload.single("image"), professionalController.addWork);
 
 router.post("/process-payment", professionalController.processPayment);
 
+router.get("/getcategories", professionalController.getCategories);
+
+router.get('/verify-email/:token',professionalController.verifyEmail);
 
 module.exports = router;

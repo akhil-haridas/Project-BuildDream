@@ -5,29 +5,12 @@ const Schema = mongoose.Schema;
 
 const worksSchema = new Schema({
   title: {
-    type:String
+    type: String,
   },
   image: {
-    type:String
+    type: String,
   },
   description: {
-    type:String
-  }
-})
-const addressSchema = new Schema({
-  street: {
-    type: String,
-  },
-  city: {
-    type: String,
-  },
-  district: {
-    type: String,
-  },
-  state: {
-    type: String,
-  },
-  zip: {
     type: String,
   },
 });
@@ -40,7 +23,6 @@ const professionalSchema = new Schema(
     },
     mobile: {
       type: String,
-      required: true,
     },
     password: {
       type: String,
@@ -64,17 +46,31 @@ const professionalSchema = new Schema(
     },
     employmentType: {
       type: String,
-      required: true,
     },
     expertise: {
       type: String,
       required: true,
-        },
-        status: {
-        type:Boolean
     },
-    address: [addressSchema],
-    works:[worksSchema]
+    status: {
+      type: Boolean,
+    },
+    location: {
+      type: String,
+    },
+    district: {
+      type: String,
+    },
+    verifyToken: {
+      type: String,
+    },
+    verified: {
+      type: Boolean,
+      default:false,
+    },
+    subscription: {
+      type: Boolean,
+    },
+    works: [worksSchema],
   },
   {
     timestamps: true,
