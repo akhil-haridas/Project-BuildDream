@@ -228,3 +228,46 @@ exports.getCategories = async (req, res) => {
     
   }
 }
+
+
+exports.getLocation = async(req, res) => {
+  try{
+    Professional.find({}, "location district")
+      .then((professionals) => {
+        const locationsAndDistricts = professionals.map((professional) => {
+          return {
+            location: professional.location,
+            district: professional.district,
+          };
+        });
+
+        res.send({ locationsAndDistricts });
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+exports.getLocations = async (req, res) => {
+  try {
+    Shop.find({}, "location district")
+      .then((professionals) => {
+        const locationsAndDistricts = professionals.map((professional) => {
+          return {
+            location: professional.location,
+            district: professional.district,
+          };
+        });
+
+        res.send({ locationsAndDistricts });
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  } catch (error) {
+    console.log(error);
+  }
+};

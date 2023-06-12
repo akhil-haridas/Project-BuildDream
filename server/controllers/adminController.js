@@ -109,19 +109,7 @@ exports.allowUser = async (req, res) => {
       }
     });
 
-    const twilioClient = twilio(
-      "AC30ef2a8d8904cb0fe50e26e1f2c3c325",
-      "e43dbd9a91c0dc9f0472d8245e7d0d43"
-    );
 
-    twilioClient.messages
-      .create({
-        body: `Dear ${professional.name}, you have requested to join our community. Please wait for the approval.`,
-        from: "+14508231866",
-        to: `+91${professional.mobile}`,
-      })
-      .then((message) => console.log("SMS sent:", message.sid))
-      .catch((error) => console.error("Error sending SMS:", error));
     return res.status(200).send({ message: "Document updated successfully" });
   }
   if (shop) {
@@ -149,19 +137,6 @@ exports.allowUser = async (req, res) => {
       }
     });
 
-    const twilioClient = twilio(
-      "AC30ef2a8d8904cb0fe50e26e1f2c3c325",
-      "e43dbd9a91c0dc9f0472d8245e7d0d43"
-    );
-
-    twilioClient.messages
-      .create({
-        body: `Dear ${shop.name},Welcome to BUILD DREM COMMUNITY , your account has been approved.Explore with us...`,
-        from: "+14508231866",
-        to: `+91${shop.mobile}`,
-      })
-      .then((message) => console.log("SMS sent:", message.sid))
-      .catch((error) => console.error("Error sending SMS:", error));
     return res.status(200).send({ message: "Document updated successfully" });
   }
 
@@ -199,19 +174,6 @@ exports.denyUser = async (req, res) => {
       }
     });
 
-    const twilioClient = twilio(
-      "AC30ef2a8d8904cb0fe50e26e1f2c3c325",
-      "e43dbd9a91c0dc9f0472d8245e7d0d43"
-    );
-
-    twilioClient.messages
-      .create({
-        body: `Dear ${professional.name},Sorry for the inconvenience, your Request was declined by admin.`,
-        from: "+14508231866",
-        to: `+91${professional.mobile}`,
-      })
-      .then((message) => console.log("SMS sent:", message.sid))
-      .catch((error) => console.error("Error sending SMS:", error));
     await Professional.findByIdAndDelete({ _id: userID });
     return res.status(200).send({ message: "Document updated successfully" });
   }
@@ -239,19 +201,6 @@ exports.denyUser = async (req, res) => {
       }
     });
 
-    const twilioClient = twilio(
-      "AC30ef2a8d8904cb0fe50e26e1f2c3c325",
-      "e43dbd9a91c0dc9f0472d8245e7d0d43"
-    );
-
-    twilioClient.messages
-      .create({
-        body: `Dear ${shop.name},Sorry for the inconvenience, your Request was declined by admin.`,
-        from: "+14508231866",
-        to: `+91${shop.mobile}`,
-      })
-      .then((message) => console.log("SMS sent:", message.sid))
-      .catch((error) => console.error("Error sending SMS:", error));
     await Shop.findOneAndDelete({ _id: userID });
     return res.status(200).send({ message: "Document updated successfully" });
   }
@@ -322,6 +271,44 @@ exports.getClient = async (req, res) => {
   try {
     const clientID = req.query.id;
     const DATA = await Clients.findById({ _id: clientID });
+    res.send({ DATA });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+exports.getProfessionals = async (req, res) => {
+  try {
+    const data = await Professional.find({});
+    res.send({ data });
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+exports.getProfessional = async (req, res) => {
+  try {
+    const proID = req.query.id;
+    const DATA = await Professional.findById({ _id: proID });
+    res.send({ DATA });
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+exports.getShops = async (req, res) => {
+  try {
+    const data = await Shop.find({});
+    res.send({ data });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+exports.getShop = async (req, res) => {
+  try {
+    const proID = req.query.id;
+    const DATA = await Shop.findById({ _id: proID });
     res.send({ DATA });
   } catch (error) {
     console.log(error);

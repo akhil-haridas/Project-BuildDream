@@ -112,7 +112,7 @@ exports.Signup = async (req, res) => {
 exports.verifyEmail = async (req, res) => {
   try {
     const { token } = req.params;
-    console.log(token);
+
     const user = await Professional.findOne({ verifyToken: token });
 
     if (!user) {
@@ -144,10 +144,10 @@ exports.Login = async (req, res) => {
       id: null,
     };
 
-    let active = false
+    let active = false;
     const professional = await Professional.find({ email: email });
 
-    if (!professional) {
+    if (professional.length == 0) {
       userLOGIN.message = "Your Email  is wrong";
       res.send({ userLOGIN });
       return;
@@ -171,7 +171,6 @@ exports.Login = async (req, res) => {
       if (member) {
         const currentDate = new Date();
         const expiryDate = new Date(member.expiry);
-        console.log(expiryDate);
 
         if (expiryDate < currentDate) {
           active = false;
@@ -181,7 +180,6 @@ exports.Login = async (req, res) => {
           console.log("Subscription is still active");
         }
       }
-      
 
       const isMatch = await bcrypt.compare(password, professional[0].password);
 
@@ -193,7 +191,7 @@ exports.Login = async (req, res) => {
         userLOGIN.name = professional[0].name;
         userLOGIN.token = token;
         userLOGIN.role = professional[0].role;
-        userLOGIN.plan = active
+        userLOGIN.plan = active;
         userLOGIN.id = professional[0]._id;
 
         const obj = {
@@ -234,15 +232,13 @@ exports.addWork = async (req, res) => {
       image: image.filename,
       description,
     };
-    console.log(work, "work");
 
-    // Find the shop by ID and update the products array
     const updatedProfessional = await Professional.findByIdAndUpdate(
       proId,
       { $push: { works: work } },
       { new: true }
     );
-    console.log(updatedProfessional);
+
     res.status(200).send({ added: true });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
@@ -259,9 +255,9 @@ exports.processPayment = async (req, res) => {
         token: token,
       },
     });
-
+    const parsedAmount = parseInt(amount);
     const paymentIntent = await stripe.paymentIntents.create({
-      amount,
+      amount: parsedAmount,
       currency,
       payment_method: paymentMethod.id,
       confirm: true,
@@ -304,6 +300,127 @@ exports.getCategories = async (req, res) => {
     const categories = await Category.find({ role: "PROFESSIONAL" });
     const data = categories.map((item) => item.name);
     res.send({ data });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+exports.getDetails = async (req, res) => {
+  try {
+    const jwtToken = jwt.verify(req.cookies.jwt.token, "secretCode");
+    const DATA = await Professional.findOne({ _id: jwtToken.id });
+    res.send({ DATA });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+exports.generalEdit = async (req, res) => {
+  try {
+    const { name, expertType } = req.body;
+    const jwtToken = jwt.verify(req.cookies.jwt.token, "secretCode");
+    const image = req.file;
+    const proId = jwtToken.id;
+
+    const user = await Professional.findById({ _id: proId });
+    if (expertType) {
+      user.employmentType = expertType;
+      await user.save();
+    }
+    if (name) {
+      user.name = name;
+      await user.save();
+    }
+    if (image) {
+      user.image = image.filename;
+      await user.save();
+    }
+
+    res.send({ user });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+exports.infoEdit = async (req, res) => {
+  try {
+    const { bio, location, district, mobile } = req.body;
+    const jwtToken = jwt.verify(req.cookies.jwt.token, "secretCode");
+    const proId = jwtToken.id;
+
+    const user = await Professional.findById({ _id: proId });
+    if (bio) {
+      user.bio = bio;
+      await user.save();
+    }
+    if (location) {
+      user.location = location;
+      await user.save();
+    }
+    if (district) {
+      user.district = district;
+      await user.save();
+    }
+    if (mobile) {
+      user.mobile = mobile;
+      await user.save();
+    }
+
+    res.send({ user });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+exports.changePass = async (req, res) => {
+  try {
+    const { current, password } = req.body;
+    const jwtToken = jwt.verify(req.cookies.jwt.token, "secretCode");
+    const proId = jwtToken.id;
+
+    const user = await Professional.findById({ _id: proId });
+
+    const passMatch = await bcrypt.compare(current, user.password);
+
+    if (passMatch) {
+      const secure_password = await securePassword(password);
+      user.password = secure_password;
+      await user.save();
+      res.json({ status: true });
+    } else {
+      res.json({ status: false });
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+exports.socialEdit = async (req, res) => {
+  try {
+    const { fb, twitter, insta, link } = req.body;
+    const jwtToken = jwt.verify(req.cookies.jwt.token, "secretCode");
+    const proId = jwtToken.id;
+
+    const user = await Professional.findById({ _id: proId });
+
+    if (fb) {
+      user.facebook = fb;
+      await user.save();
+    }
+    if (twitter) {
+      user.twitter = twitter;
+      await user.save();
+    }
+    if (insta) {
+      user.insta = insta;
+      await user.save();
+    }
+    if (link) {
+      user.linkedin = link;
+      await user.save();
+    }
+
+    res.send({ user });
   } catch (error) {
     console.log(error);
   }

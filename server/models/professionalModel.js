@@ -37,6 +37,18 @@ const professionalSchema = new Schema(
     bio: {
       type: String,
     },
+    facebook: {
+      type: String,
+    },
+    twitter: {
+      type: String,
+    },
+    insta: {
+      type: String,
+    },
+    linkedin: {
+      type: String,
+    },
     role: {
       type: String,
       required: true,
@@ -65,10 +77,7 @@ const professionalSchema = new Schema(
     },
     verified: {
       type: Boolean,
-      default:false,
-    },
-    subscription: {
-      type: Boolean,
+      default: false,
     },
     works: [worksSchema],
   },

@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const clientController = require("../controllers/clientController");
 const multer = require("multer");
+const authJWT = require("../middlewares/authJWT");
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -30,22 +31,25 @@ const upload = multer({
   fileFilter: fileFilter,
 });
 
-router.post("/signup", upload.single('image'), clientController.Signup);
+router.post("/signup", upload.single('image'),clientController.Signup);
 
-router.post('/login', clientController.Login)
+router.post('/login',clientController.Login)
 
-router.get('/myaccount',clientController.MyAccount)
+router.get('/myaccount',authJWT,clientController.MyAccount)
 
-router.post('/resetpass', clientController.Resetpass)
+router.post('/resetpass', authJWT,clientController.Resetpass)
 
-router.get('/professionals', clientController.GetProfessionals)
+router.get('/professionals',clientController.GetProfessionals)
 
-router.get("/professional?:id", clientController.GetProfessional);
+router.get("/professional?:id",clientController.GetProfessional);
 
-router.get("/shops", clientController.GetShops);
+router.get("/shops",clientController.GetShops);
 
-router.get("/shop?:id", clientController.GetShop);
+router.get("/shop?:id",clientController.GetShop);
 
 router.get("/getcategories",clientController.getCategories);
+
+router.get("/getlocations", clientController.getLocation);
+router.get("/getlocationss", clientController.getLocations);
 
 module.exports = router;

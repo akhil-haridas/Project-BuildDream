@@ -14,23 +14,7 @@ const productsSchema = new Schema({
     type:String
   }
 });
-const addressSchema = new Schema({
-  street: {
-    type: String,
-  },
-  city: {
-    type: String,
-  },
-  district: {
-    type: String,
-  },
-  state: {
-    type: String,
-  },
-  zip: {
-    type: String,
-  },
-});
+
 
 const shopSchema = new Schema(
   {
@@ -40,7 +24,6 @@ const shopSchema = new Schema(
     },
     mobile: {
       type: String,
-      required: true,
     },
     password: {
       type: String,
@@ -55,6 +38,18 @@ const shopSchema = new Schema(
     bio: {
       type: String,
     },
+    facebook: {
+      type: String,
+    },
+    twitter: {
+      type: String,
+    },
+    insta: {
+      type: String,
+    },
+    linkedin: {
+      type: String,
+    },
     role: {
       type: String,
       required: true,
@@ -64,7 +59,6 @@ const shopSchema = new Schema(
     },
     businessType: {
       type: String,
-      required: true,
     },
     category: {
       type: String,
@@ -73,8 +67,20 @@ const shopSchema = new Schema(
     status: {
       type: Boolean,
     },
+    location: {
+      type: String,
+    },
+    district: {
+      type: String,
+    },
+    verifyToken: {
+      type: String,
+    },
+    verified: {
+      type: Boolean,
+      default: false,
+    },
     products: [productsSchema],
-    address: [addressSchema],
   },
   {
     timestamps: true,
