@@ -65,7 +65,7 @@ exports.Permissions = async (req, res) => {
   const pros = await Professional.find({ status: "false" });
   const shops = await Shop.find({ status: "false" });
   const data = [...pros, ...shops];
-
+// mongodb aggregation
   data.sort((a, b) => {
     const dateA = new Date(a.createdAt);
     const dateB = new Date(b.createdAt);

@@ -1,7 +1,7 @@
 const User = require("../models/clientModel");
 const Professional = require("../models/professionalModel");
 const Shop = require("../models/shopModel");
-const Category = require("../models/categoryModel")
+const Category = require("../models/categoryModel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
@@ -146,6 +146,31 @@ exports.MyAccount = async (req, res) => {
   }
 };
 
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { mobile } = req.body;
+
+    const userRESET = {
+      status: false,
+      message: null,
+    };
+    const user = await User.findOne({ mobile: mobile });
+
+    if (!user) {
+      userRESET.message = "You are no longer a member";
+      res.send({ userRESET });
+      return;
+    } else {
+      userRESET.status = true
+      res.send({ userRESET });
+    }
+
+
+  } catch (error) {
+    console.log(error.message);
+  }
+};
+
 //Reset Password
 
 exports.Resetpass = async (req, res) => {
@@ -158,11 +183,6 @@ exports.Resetpass = async (req, res) => {
     };
 
     const user = await User.findOne({ mobile: mobile });
-    if (!user) {
-      userLOGIN.message = "You are no longer a member";
-      res.send({ userRESET });
-      return;
-    }
 
     const password = await securePassword(newpass);
 
@@ -191,13 +211,12 @@ exports.GetProfessionals = async (req, res) => {
 exports.GetProfessional = async (req, res) => {
   try {
     const id = req.query.id;
-    const DATA = await Professional.findById({ _id: id })
-    res.send({DATA})
+    const DATA = await Professional.findById({ _id: id });
+    res.send({ DATA });
   } catch (error) {
     console.log(error);
   }
 };
-
 
 exports.GetShops = async (req, res) => {
   try {
@@ -218,20 +237,16 @@ exports.GetShop = async (req, res) => {
   }
 };
 
-
 exports.getCategories = async (req, res) => {
   try {
-    const proDATA = await Category.find({ role: "PROFESSIONAL" })
-    const shopDATA = await Category.find({ role: "SHOP" })
-    res.send({proDATA,shopDATA})
-  } catch (error) {
-    
-  }
-}
+    const proDATA = await Category.find({ role: "PROFESSIONAL" });
+    const shopDATA = await Category.find({ role: "SHOP" });
+    res.send({ proDATA, shopDATA });
+  } catch (error) {}
+};
 
-
-exports.getLocation = async(req, res) => {
-  try{
+exports.getLocation = async (req, res) => {
+  try {
     Professional.find({}, "location district")
       .then((professionals) => {
         const locationsAndDistricts = professionals.map((professional) => {
@@ -247,9 +262,9 @@ exports.getLocation = async(req, res) => {
         console.error(err);
       });
   } catch (error) {
-    console.log(error)
+    console.log(error);
   }
-}
+};
 
 exports.getLocations = async (req, res) => {
   try {

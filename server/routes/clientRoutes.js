@@ -37,7 +37,9 @@ router.post('/login',clientController.Login)
 
 router.get('/myaccount',authJWT,clientController.MyAccount)
 
-router.post('/resetpass', authJWT,clientController.Resetpass)
+router.post('/forgotpassword',clientController.forgotPassword)
+
+router.post('/resetpass',clientController.Resetpass)
 
 router.get('/professionals',clientController.GetProfessionals)
 
@@ -50,6 +52,7 @@ router.get("/shop?:id",clientController.GetShop);
 router.get("/getcategories",clientController.getCategories);
 
 router.get("/getlocations", clientController.getLocation);
+
 router.get("/getlocationss", clientController.getLocations);
 
 module.exports = router;
