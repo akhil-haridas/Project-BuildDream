@@ -55,4 +55,12 @@ router.get("/getlocations", clientController.getLocation);
 
 router.get("/getlocationss", clientController.getLocations);
 
+router.post("/chat", clientController.getChat);
+
+router.get("/chat", clientController.accessChat);
+
+router.post("/message",clientController.sendMessage)
+
+router.get("/message?:id",clientController.allMessages)
+
 module.exports = router;

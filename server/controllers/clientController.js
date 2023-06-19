@@ -2,6 +2,9 @@ const User = require("../models/clientModel");
 const Professional = require("../models/professionalModel");
 const Shop = require("../models/shopModel");
 const Category = require("../models/categoryModel");
+const Chat = require("../models/chatModel");
+const Message = require("../models/messageModel");
+const asyncHandler = require("express-async-handler");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
@@ -36,7 +39,7 @@ exports.Signup = async (req, res) => {
       }
       if (shop) {
         return res.json({
-          Status: false,
+          Status: false, 
           message: "You have already have a shop account using this number.",
         });
       }
@@ -79,6 +82,7 @@ exports.Login = async (req, res) => {
       token: null,
       name: null,
       role: null,
+      id:null
     };
 
     const user = await User.findOne({ mobile: mobileNumber });
@@ -101,11 +105,12 @@ exports.Login = async (req, res) => {
         userLOGIN.name = user.name;
         userLOGIN.token = token;
         userLOGIN.role = user.role;
-
+        userLOGIN.id = user._id
         const obj = {
           token,
           name: user.name,
           role: user.role,
+          id:user._id
         };
 
         res
@@ -161,11 +166,9 @@ exports.forgotPassword = async (req, res) => {
       res.send({ userRESET });
       return;
     } else {
-      userRESET.status = true
+      userRESET.status = true;
       res.send({ userRESET });
     }
-
-
   } catch (error) {
     console.log(error.message);
   }
@@ -175,8 +178,7 @@ exports.forgotPassword = async (req, res) => {
 
 exports.Resetpass = async (req, res) => {
   try {
-    const { newpass, mobile } = req.body;
-
+    const { password, mobile } = req.body;
     const userRESET = {
       status: false,
       message: null,
@@ -184,9 +186,9 @@ exports.Resetpass = async (req, res) => {
 
     const user = await User.findOne({ mobile: mobile });
 
-    const password = await securePassword(newpass);
+    const hashPassword = await securePassword(password);
 
-    user.password = password;
+    user.password = hashPassword;
 
     const updatedUser = await user.save();
 
@@ -286,3 +288,193 @@ exports.getLocations = async (req, res) => {
     console.log(error);
   }
 };
+
+exports.getAvatar = async (req, res) => {
+  try {
+    const id = req.query.id;
+    // Find user in the Professional collection
+    const professionalUser = await Professional.findById({ _id: id });
+    // Find user in the Shop collection
+    const shopUser = await Shop.findById({ _id: id });
+    const clientUser = await User.findById({ _id: id });
+    if (clientUser) {
+      let DATA = clientUser;
+      return res.send({ DATA });
+    }
+    if (professionalUser) {
+      let DATA = professionalUser;
+      return res.send({ DATA });
+    }
+    if (shopUser) {
+      let DATA = shopUser;
+      return res.send({ DATA });
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+exports.getChat = asyncHandler(async (req, res) => {
+  const { userId, userType } = req.body;
+
+  const jwtToken = jwt.verify(req.cookies.jwt.token, "secretCode");
+  const userID = jwtToken.id;
+  if (!userId || !userType) {
+    console.log("UserId or UserType param not sent with request");
+    return res.sendStatus(400);  
+  }
+
+  try {
+    const isChat = await Chat.find({
+      isGroupChat: false,
+      $and: [
+        { users: { $elemMatch: { refType: "User", refId: userID } } },
+        { users: { $elemMatch: { refType: userType, refId: userId } } },
+      ],
+    })
+      .populate({
+        path: "users.refId",
+        populate: {
+          path: userType, // For Professional userType
+          model: userType,
+          select: "name",
+        },
+      })
+      .populate("latestMessage")
+      .populate("groupAdmin");
+
+    if (isChat.length > 0) {
+      res.send(isChat[0]);
+    } else {
+      const chatData = {
+        chatName: "sender",
+        isGroupChat: false,
+        users: [
+          { refType: "User", refId: userID },
+          { refType: userType, refId: userId },
+        ],
+        latestMessage: null,
+        groupAdmin: null,
+      };
+
+      const createdChat = await Chat.create(chatData);
+      const FullChat = await Chat.findOne({ _id: createdChat._id }).populate({
+        path: "users.refId",
+        populate: {
+          path: userType, 
+          model: userType,
+          select: "name",
+        },
+      });
+
+      res.status(200).json(FullChat);
+    }
+  } catch (error) {
+    res.status(400);
+    throw new Error(error.message);
+  }
+})
+
+exports.accessChat = asyncHandler(async (req, res) => {
+  try {
+    const jwtToken = jwt.verify(req.cookies.jwt.token, "secretCode");
+    const userID = jwtToken.id;
+    // const userID = "6489b09e829661f7c73c24f2";
+    const userType = "User";
+
+  let results = await Chat.find({
+    "users.refType": userType,
+    "users.refId": userID,
+  })
+    .populate({
+      path: "users.refId",
+      populate: {
+        path: userType,
+        model: userType,
+        select: "name",
+      },
+    })
+    .populate({
+      path: "latestMessage.sender.refId",
+      populate: {
+        path: "latestMessage.sender.refType",
+        model: "latestMessage.sender.refType",
+        select: "name",
+      },
+    })
+    .sort({ updatedAt: -1 });
+
+    res.status(200).send(results);
+
+  } catch (error) {
+    res.status(400);  
+    throw new Error(error.message);
+  }
+})
+
+exports.sendMessage = asyncHandler(async (req, res) => {
+
+  const { content, chatId } = req.body;
+  const jwtToken = jwt.verify(req.cookies.jwt.token, "secretCode");
+  const userID = jwtToken.id;
+  // const userID = "6489b09e829661f7c73c24f2";
+
+  if (!content || !chatId) {
+    console.log("Invalid data passed into request");
+    return res.sendStatus(400);
+  } 
+
+  var newMessage = {
+    sender: { refType: "User", refId: userID },
+    content: content,
+    chat: chatId,
+  };
+
+  try {
+    var message = await Message.create(newMessage);
+
+    message = await message.populate({
+      path: "sender.refId",
+      select: "name image",
+    });
+
+    message = await message.populate({ path: "chat" });
+  const users = message.chat.users;
+
+  // Extract the refType values from the users array
+  const refTypes = users.map((user) => user.refType);
+
+  // Create an array of objects specifying the model and path for each refType
+  const populateOptions = refTypes.map((refType) => ({
+    path: "chat.users.refId",
+    populate: {
+      path: refType,
+      model: refType,
+      select: "name image",
+    },
+  }));
+
+  message = await message.populate(populateOptions);
+
+    await Chat.findByIdAndUpdate(chatId, { latestMessage: message });
+    res.json(message);
+  } catch (error) {
+    res.status(400);
+    throw new Error(error.message);
+  }
+});
+
+exports.allMessages = asyncHandler(async (req, res) => {
+  try {
+    const chatId = req.query.id
+    const messages = await Message.find({ chat: chatId })
+      .populate({
+      path: "sender.refId",   
+      select: "name image",
+    }).populate("chat")
+    res.json(messages);  
+  } catch (error) {
+    res.status(400); 
+    throw new Error(error.message);
+  }
+});

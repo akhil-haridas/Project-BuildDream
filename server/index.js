@@ -23,9 +23,11 @@ app.use(
 );
 
 mongoose
-  .connect("mongodb://127.0.0.1:27017/project-build-dream")
+  .connect("mongodb://127.0.0.1:27017/project-build-dream", {
+    useNewUrlParser: true,
+  })
   .then(() => {
-    console.log("connected");
+    console.log("database connected");
   })
   .catch((err) => {
     console.log(err);
@@ -40,6 +42,45 @@ app.use("/uploads", express.static("./uploads"));
 
 const PORT = process.env.PORT || 4000;
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server listening on ${PORT}`);
+});
+
+const io = require("socket.io")(server, {
+  pingTimeout: 60000,
+  cors: {
+    origin: "http://localhost:3000",
+  },
+});
+
+io.on("connection", (socket) => {
+  socket.on("setup", (userData) => {
+    socket.join(userData);
+    socket.emit("connected");
+  });
+
+  socket.on("join chat", (room) => {
+    socket.join(room);
+    // console.log("user joined Romm :" + room)
+  });
+
+  socket.on("typing", (room) => socket.in(room).emit("typing"))
+  socket.on("stop typing", (room) => socket.in(room).emit("stop typing"));
+
+  socket.on("new message", (newMessageRecieved) => {
+    var chat = newMessageRecieved.chat;
+    if (!chat.users) return console.log("chat.users not defined");
+    chat.users.forEach((user) => {
+      if (user.refId == newMessageRecieved.sender.refId) return;
+
+      socket.in(user.refId).emit("message recieved", newMessageRecieved);
+    });
+  });
+
+
+  socket.off("setup", () => {
+    console.log('USER DISCONNECTED')
+    socket.leave(userData);
+  });
+
 });

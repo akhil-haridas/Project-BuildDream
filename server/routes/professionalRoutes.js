@@ -53,4 +53,20 @@ router.post("/changepass", authJWT,professionalController.changePass);
 
 router.post("/socialedit", authJWT,professionalController.socialEdit);
 
+router.get("/getwork?:id",authJWT,professionalController.getWork)
+
+router.post("/editwork?:id", upload.single("image"), authJWT, professionalController.editWork)
+
+router.delete("/deletework?:id",authJWT,professionalController.deleteWork);
+
+router.get("/getplan", authJWT, professionalController.getPlan);
+
+router.post("/chat", professionalController.getChat);
+
+router.get("/chat", professionalController.accessChat);
+
+router.post("/message", professionalController.sendMessage);
+
+router.get("/message?:id", professionalController.allMessages);
+
 module.exports = router;

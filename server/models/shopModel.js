@@ -5,16 +5,15 @@ const Schema = mongoose.Schema;
 
 const productsSchema = new Schema({
   name: {
-    type:String
+    type: String,
   },
   price: {
-    type:String
+    type: String,
   },
   image: {
-    type:String
-  }
+    type: String,
+  },
 });
-
 
 const shopSchema = new Schema(
   {
@@ -31,6 +30,8 @@ const shopSchema = new Schema(
     },
     image: {
       type: String,
+      default:
+        "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg",
     },
     email: {
       type: String,
@@ -79,6 +80,26 @@ const shopSchema = new Schema(
     verified: {
       type: Boolean,
       default: false,
+    },
+    block: {
+      type: Boolean,
+      default: false,
+    },
+    Shop: {
+      type: Schema.Types.ObjectId,
+      ref: "Shop",
+    },
+    Professional: {
+      type: Schema.Types.ObjectId,
+      ref: "Professional",
+    },
+    User: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+    Chat: {
+      type: Schema.Types.ObjectId,
+      ref: "Chat",
     },
     products: [productsSchema],
   },

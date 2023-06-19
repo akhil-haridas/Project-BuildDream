@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const Professional = require("../models/professionalModel");
 const Shop = require("../models/shopModel");
+const Subscription = require("../models/subscriptionModel");
 const Category = require("../models/categoryModel");
 const Clients = require("../models/clientModel");
 const nodemailer = require("nodemailer");
@@ -65,7 +66,7 @@ exports.Permissions = async (req, res) => {
   const pros = await Professional.find({ status: "false" });
   const shops = await Shop.find({ status: "false" });
   const data = [...pros, ...shops];
-// mongodb aggregation
+  // mongodb aggregation
   data.sort((a, b) => {
     const dateA = new Date(a.createdAt);
     const dateB = new Date(b.createdAt);
@@ -108,7 +109,6 @@ exports.allowUser = async (req, res) => {
         console.log("Email sent:", info.response);
       }
     });
-
 
     return res.status(200).send({ message: "Document updated successfully" });
   }
@@ -260,7 +260,6 @@ exports.removeCategory = async (req, res) => {
 exports.getClients = async (req, res) => {
   try {
     const data = await Clients.find({});
-    console.log(data);
     res.send({ data });
   } catch (error) {
     console.log(error);
@@ -284,7 +283,7 @@ exports.getProfessionals = async (req, res) => {
   } catch (error) {
     console.log(error);
   }
-}
+};
 
 exports.getProfessional = async (req, res) => {
   try {
@@ -294,7 +293,7 @@ exports.getProfessional = async (req, res) => {
   } catch (error) {
     console.log(error);
   }
-}
+};
 
 exports.getShops = async (req, res) => {
   try {
@@ -312,5 +311,95 @@ exports.getShop = async (req, res) => {
     res.send({ DATA });
   } catch (error) {
     console.log(error);
+  }
+};
+
+exports.blockClient = async (req, res) => {
+  try {
+    const clientID = req.params.id;
+    const client = await Clients.findById(clientID);
+    if (client.block) {
+      client.block = false;
+      await client.save();
+    } else {
+      client.block = true;
+      await client.save();
+    }
+    res.send({ status: true });
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).send({
+      status: false,
+      message: "An error occurred while blocking/unblocking the client",
+    });
+  }
+};
+
+exports.blockProfessional = async (req, res) => {
+  try {
+    const professionalID = req.params.id;
+    const professional = await Professional.findById(professionalID);
+    if (professional.block) {
+      professional.block = false;
+      await professional.save();
+    } else {
+      professional.block = true;
+      await professional.save();
+    }
+    res.send({ status: true });
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).send({
+      status: false,
+      message: "An error occurred while blocking/unblocking the professional",
+    });
+  }
+};
+
+exports.blockShop = async (req, res) => {
+  try {
+    const shopID = req.params.id;
+    const shop = await Shop.findById(shopID);
+    if (shop.block) {
+      shop.block = false;
+      await shop.save();
+    } else {
+      shop.block = true;
+      await shop.save();
+    }
+    res.send({ status: true });
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).send({
+      status: false,
+      message: "An error occurred while blocking/unblocking the shop",
+    });
+  }
+};
+
+exports.getSubscriptions = async (req, res) => {
+  try {
+    const subscriptions = await Subscription.find()
+      .populate({
+        path: "user",
+        populate: {
+          path: "Professional", // For Professional userType
+          model: "Professional",
+          select: "name email",
+        },
+      })
+      .populate({
+        path: "user",
+        populate: {
+          path: "Shop", // For Shop userType
+          model: "Shop",
+          select: "name email",
+        },
+      })
+      .exec();
+
+    res.json({ subscriptions });
+  } catch (error) {
+    console.log(error.message);
   }
 };

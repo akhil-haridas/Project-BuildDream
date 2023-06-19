@@ -51,6 +51,22 @@ router.post("/infoedit", authJWT,shopController.infoEdit);
 
 router.post("/changepass", authJWT,shopController.changePass);
 
-router.post("/socialedit", authJWT,shopController.socialEdit);
+router.post("/socialedit", authJWT, shopController.socialEdit);
+
+router.get("/getproduct?:id", authJWT, shopController.getProduct);
+
+router.post("/editproduct?:id", upload.single("image"), authJWT, shopController.editProduct)
+
+router.delete("/deleteproduct?:id", authJWT, shopController.deleteProduct);
+
+router.get("/getplan", authJWT, shopController.getPlan);
+
+router.post("/chat", shopController.getChat);
+
+router.get("/chat", shopController.accessChat);
+
+router.post("/message", shopController.sendMessage);
+
+router.get("/message?:id", shopController.allMessages);
 
 module.exports = router;

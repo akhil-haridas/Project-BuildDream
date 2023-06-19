@@ -57,6 +57,14 @@ router.get("/getprofessional?:id",authJWT, adminController.getProfessional);
 
 router.get("/getshops",authJWT, adminController.getShops);
 
-router.get("/getshop?:id",authJWT, adminController.getShop);
+router.get("/getshop?:id", authJWT, adminController.getShop);
+
+router.get("/blockclient/:id", authJWT, adminController.blockClient);
+
+router.get("/blockprofessional/:id", authJWT, adminController.blockProfessional);
+
+router.get("/blockshop/:id", authJWT, adminController.blockShop);
+
+router.get("/getsubscriptions",authJWT,adminController.getSubscriptions);
 
 module.exports = router;

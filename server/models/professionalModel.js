@@ -30,6 +30,8 @@ const professionalSchema = new Schema(
     },
     image: {
       type: String,
+      default:
+        "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg",
     },
     email: {
       type: String,
@@ -78,6 +80,26 @@ const professionalSchema = new Schema(
     verified: {
       type: Boolean,
       default: false,
+    },
+    block: {
+      type: Boolean,
+      default: false,
+    },
+    Professional: {
+      type: Schema.Types.ObjectId,
+      ref: "Professional",
+    },
+    Shop: {
+      type: Schema.Types.ObjectId,
+      ref: "Shop",
+    },
+    User: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+    Chat: {
+      type: Schema.Types.ObjectId,
+      ref: "Chat",
     },
     works: [worksSchema],
   },

@@ -4,6 +4,9 @@ const User = require("../models/clientModel");
 const Category = require("../models/categoryModel");
 const Subscription = require("../models/subscriptionModel");
 const bcrypt = require("bcrypt");
+const Chat = require("../models/chatModel");
+const Message = require("../models/messageModel");
+const asyncHandler = require("express-async-handler");
 const { v4: uuidv4 } = require("uuid");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
@@ -198,6 +201,7 @@ exports.Login = async (req, res) => {
           token,
           name: professional[0].name,
           role: professional[0].role,
+          id: professional[0]._id,
         };
 
         res
@@ -248,6 +252,7 @@ exports.addWork = async (req, res) => {
 exports.processPayment = async (req, res) => {
   try {
     const { token, amount, currency, userid } = req.body;
+    const userType = "Professional";
 
     const paymentMethod = await stripe.paymentMethods.create({
       type: "card",
@@ -255,7 +260,10 @@ exports.processPayment = async (req, res) => {
         token: token,
       },
     });
+
     const parsedAmount = parseInt(amount);
+    let planName
+    const planValue = (parsedAmount / 100).toString(); // Convert amount to string and divide by 100
     const paymentIntent = await stripe.paymentIntents.create({
       amount: parsedAmount,
       currency,
@@ -268,22 +276,33 @@ exports.processPayment = async (req, res) => {
       paymentIntent.next_action.type === "use_stripe_sdk"
     ) {
       const currentDate = new Date();
-      const expiryDate = new Date(currentDate);
-      expiryDate.setDate(expiryDate.getDate() + 30);
+      let expiryDate = new Date(currentDate);
 
-      await Subscription.create({
+      if (planValue === "49") {
+        // 49 plan for 1 month
+        expiryDate.setMonth(expiryDate.getMonth() + 1);
+        planName = "BASIC"
+      } else if (planValue === "99") {
+        // 99 plan for 2 months
+        expiryDate.setMonth(expiryDate.getMonth() + 2);
+        planName = "STANDARD";
+      } else if (planValue === "149") {
+        // 149 plan for 3 months
+        expiryDate.setMonth(expiryDate.getMonth() + 3);
+        planName = "PREMIUM";
+      }
+
+      let subscriptionData = {
+        userType: userType,
         user: userid,
-        plan: amount,
+        plan: planValue,
+        planName:planName,
         expiry: expiryDate,
-      });
+      };
+
+      await Subscription.create(subscriptionData);
 
       res.status(200).json({ message: "Payment succeeded!" });
-      // res.status(200).json({
-      //   requiresAction: true,
-      //   paymentIntentId: paymentIntent.id,
-      //   clientSecret: paymentIntent.client_secret,
-      //   stripeSdkUrl: paymentIntent.next_action.use_stripe_sdk.stripe_js,
-      // });
     } else if (paymentIntent.status === "succeeded") {
       res.status(200).json({ message: "Payment succeeded!" });
     } else {
@@ -294,6 +313,9 @@ exports.processPayment = async (req, res) => {
     res.status(500).json({ message: "Error processing payment" });
   }
 };
+
+
+
 
 exports.getCategories = async (req, res) => {
   try {
@@ -425,3 +447,272 @@ exports.socialEdit = async (req, res) => {
     console.log(error);
   }
 };
+
+exports.getWork = async (req,res) => {
+  try {
+    const id = req.query.id;
+    const professional = await Professional.findOne({ 'works._id': id })
+     const work = professional.works.find(
+       (work) => work._id.toString() === id
+    );
+    res.send({work})
+  } catch (error) {
+    console.log(error.message);
+  }
+};
+
+
+exports.editWork = async (req, res) => {
+  try {
+    const { title, description } = req.body
+    const image = req.file
+    const workId = req.query.id // ID of the work object you want to update
+    const updates = {}; // Object to store the fields to update
+
+    // Add fields to the updates object as needed
+    if (image?.filename) {
+      updates["works.$.image"] = image.filename;
+    }
+    if (title) {
+      updates["works.$.title"] = title;
+    }
+    if (description) {
+      updates["works.$.description"] = description;
+    }
+
+    try {
+      const updatedProfessional = await Professional.findOneAndUpdate(
+        { "works._id": workId },
+        {
+          $set: updates,
+        },
+        { new: true }
+      );
+
+      res.send({status:true})
+    } catch (err) {
+      console.error(err);
+      // Handle any errors that occurred during the update
+      // For example, you can send an error response
+    }
+
+  } catch (error) {
+    console.log(error.message)
+  }
+}
+
+exports.deleteWork = async (req, res) => {
+ 
+  try {
+    const id = req.query.id;
+
+    // Find the professional by ID
+    const professional = await Professional.findOne({ "works._id": id });
+
+    if (!professional) {
+      return res
+        .status(404)
+        .json({ status: false, message: "Professional not found" });
+    }
+
+    // Find the index of the work within the works array
+    const workIndex = professional.works.findIndex(
+      (work) => work._id.toString() === id
+    );
+
+    if (workIndex === -1) {
+      return res.status(404).json({ status: false, message: "Work not found" });
+    }
+
+    // Remove the work from the works array
+    professional.works.splice(workIndex, 1);
+
+    // Save the updated professional
+    await professional.save();
+
+    return res
+      .status(200)
+      .json({ status: true, message: "Work deleted successfully" });
+  } catch (error) {
+    console.log(error.message)
+  }
+}
+
+exports.getPlan = async (req, res) => {
+  try {
+     const jwtToken = jwt.verify(req.cookies.jwt.token, "secretCode");
+    const proId = jwtToken.id;
+    
+    const plan = await Subscription.findOne({ user: proId })
+    res.send({plan})
+  } catch (error) {
+    console.log(error.message)
+  }
+}
+
+
+exports.getChat = asyncHandler(async (req, res) => {
+  const { userId, userType } = req.body;
+
+  const jwtToken = jwt.verify(req.cookies.jwt.token, "secretCode");
+  const userID = jwtToken.id;
+  if (!userId || !userType) {
+    console.log("UserId or UserType param not sent with request");
+    return res.sendStatus(400);
+  }
+
+  try {
+    const isChat = await Chat.find({
+      isGroupChat: false,
+      $and: [
+        { users: { $elemMatch: { refType: "Professional", refId: userID } } },
+        { users: { $elemMatch: { refType: userType, refId: userId } } },
+      ],
+    })
+      .populate({
+        path: "users.refId",
+        populate: {
+          path: userType, // For Professional userType
+          model: userType,
+          select: "name",
+        },
+      })
+      .populate("latestMessage")
+      .populate("groupAdmin");
+
+    if (isChat.length > 0) {
+      res.send(isChat[0]);
+    } else {
+      const chatData = {
+        chatName: "sender",
+        isGroupChat: false,
+        users: [
+          { refType: "Professional", refId: userID },
+          { refType: userType, refId: userId },
+        ],
+        latestMessage: null,
+        groupAdmin: null,
+      };
+
+      const createdChat = await Chat.create(chatData);
+      const FullChat = await Chat.findOne({ _id: createdChat._id }).populate({
+        path: "users.refId",
+        populate: {
+          path: userType, // For Professional userType
+          model: userType,
+          select: "name",
+        },
+      });
+
+      res.status(200).json(FullChat);
+    }
+  } catch (error) {
+    res.status(400);
+    throw new Error(error.message);
+  }
+});
+
+exports.accessChat = asyncHandler(async (req, res) => {
+  try {
+    const jwtToken = jwt.verify(req.cookies.jwt.token, "secretCode");
+    const userID = jwtToken.id;
+    // const userID = "6489b09e829661f7c73c24f2";
+    const userType = "Professional";
+
+    let results = await Chat.find({
+      "users.refType": userType,
+      "users.refId": userID,
+    })
+      .populate({
+        path: "users.refId",
+        populate: {
+          path: userType,
+          model: userType,
+          select: "name",
+        },
+      })
+      .populate({
+        path: "latestMessage.sender.refId",
+        populate: {
+          path: "latestMessage.sender.refType",
+          model: "latestMessage.sender.refType",
+          select: "name",
+        },
+      })
+      .sort({ updatedAt: -1 });
+
+    res.status(200).send(results);
+  } catch (error) {
+    res.status(400);
+    throw new Error(error.message);
+  }
+});
+
+exports.sendMessage = asyncHandler(async (req, res) => {
+  const { content, chatId } = req.body;
+  const jwtToken = jwt.verify(req.cookies.jwt.token, "secretCode");
+  const userID = jwtToken.id;
+ 
+  // const userID = "6489b09e829661f7c73c24f2";
+
+  if (!content || !chatId) {
+    console.log("Invalid data passed into request");
+    return res.sendStatus(400);
+  }
+
+  var newMessage = {
+    sender: { refType: "Professional", refId: userID },
+    content: content,
+    chat: chatId,
+  };
+
+  try {
+    var message = await Message.create(newMessage);
+
+    message = await message.populate({
+      path: "sender.refId",
+      select: "name image",
+    });
+
+    message = await message.populate({ path: "chat" });
+    const users = message.chat.users;
+
+    // Extract the refType values from the users array
+    const refTypes = users.map((user) => user.refType);
+
+    // Create an array of objects specifying the model and path for each refType
+    const populateOptions = refTypes.map((refType) => ({
+      path: "chat.users.refId",
+      populate: {
+        path: refType,
+        model: refType,
+        select: "name image",
+      },
+    }));
+
+    message = await message.populate(populateOptions);
+
+    await Chat.findByIdAndUpdate(chatId, { latestMessage: message });
+
+    res.json(message);
+  } catch (error) {
+    res.status(400);
+    throw new Error(error.message);
+  }
+});
+
+exports.allMessages = asyncHandler(async (req, res) => {
+  try {
+    const chatId = req.query.id;
+    const messages = await Message.find({ chat: chatId })
+      .populate({
+        path: "sender.refId",
+        select: "name image",
+      })
+      .populate("chat");
+    res.json(messages);
+  } catch (error) {
+    res.status(400);
+    throw new Error(error.message);
+  }
+});
