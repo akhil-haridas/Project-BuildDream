@@ -6,11 +6,11 @@ const Subscription = require("../models/subscriptionModel");
 const Category = require("../models/categoryModel");
 const Clients = require("../models/clientModel");
 const nodemailer = require("nodemailer");
-const twilio = require("twilio");
+require("dotenv").config();
 
 exports.Login = async (req, res) => {
-  const adminMAIL = "admin@gmail.com";
-  const adminPASS = await bcrypt.hash("admin@2000", 10);
+  const adminMAIL = process.env.ADMIN_MAIL;
+  const adminPASS = await bcrypt.hash(process.env.ADMIN_PASS, 10);
   try {
     const { enteredEmail, enteredPassword } = req.body;
 
@@ -90,13 +90,13 @@ exports.allowUser = async (req, res) => {
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: "4khilharidas@gmail.com",
-        pass: "bsqzewxygzkbnada",
+        user: process.env.NODEMAILER,
+        pass: process.env.NODEMAILER_PASS,
       },
     });
 
     const mailOptions = {
-      from: "4khilharidas@gmail.com",
+      from: process.env.NODEMAILER,
       to: professional.email,
       subject: "Welcome to BUILD DREAM community",
       text: `Dear ${professional.name}, Welcome to BUILD DREM COMMUNITY , your account has been approved.Explore with us...`,
@@ -117,13 +117,13 @@ exports.allowUser = async (req, res) => {
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: "4khilharidas@gmail.com",
-        pass: "bsqzewxygzkbnada",
+        user: process.env.NODEMAILER,
+        pass: process.env.NODEMAILER_PASS,
       },
     });
 
     const mailOptions = {
-      from: "4khilharidas@gmail.com",
+      from: process.env.NODEMAILER,
       to: shop.email,
       subject: "Welcome to BUILD DREAM community",
       text: `Dear ${shop.name}, Welcome to BUILD DREM COMMUNITY , your account has been approved.Explore with us...`,
@@ -154,13 +154,13 @@ exports.denyUser = async (req, res) => {
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: "4khilharidas@gmail.com",
-        pass: "bsqzewxygzkbnada",
+        user: process.env.NODEMAILER,
+        pass: process.env.NODEMAILER_PASS,
       },
     });
 
     const mailOptions = {
-      from: "4khilharidas@gmail.com",
+      from: process.env.NODEMAILER,
       to: professional.email,
       subject: "BUIL DREAM COMMUNITY",
       text: `Dear ${professional.name}, Sorry for the inconvenience, your Request was declined by admin.`,
@@ -181,8 +181,8 @@ exports.denyUser = async (req, res) => {
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: "4khilharidas@gmail.com",
-        pass: "bsqzewxygzkbnada",
+        user: process.env.NODEMAILER,
+        pass: process.env.NODEMAILER_PASS,
       },
     });
 
@@ -383,7 +383,7 @@ exports.getSubscriptions = async (req, res) => {
       .populate({
         path: "user",
         populate: {
-          path: "Professional", // For Professional userType
+          path: "Professional",
           model: "Professional",
           select: "name email",
         },
@@ -391,7 +391,7 @@ exports.getSubscriptions = async (req, res) => {
       .populate({
         path: "user",
         populate: {
-          path: "Shop", // For Shop userType
+          path: "Shop", 
           model: "Shop",
           select: "name email",
         },

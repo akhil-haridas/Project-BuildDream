@@ -5,6 +5,8 @@ const path = require("path");
 
 const cookieParser = require("cookie-parser");
 const mongoose = require("mongoose");
+require("dotenv").config();
+mongoose.set("strictQuery", false);
 
 const clientRouter = require("./routes/clientRoutes");
 const professionalRouter = require("./routes/professionalRoutes");
@@ -15,7 +17,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   CORS({
-    origin: ["http://localhost:3000"],
+    origin: [process.env.ORIGIN],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
     allowedHeaders: ["Content-Type", "Access-Control-Allow-Headers"],
@@ -23,11 +25,11 @@ app.use(
 );
 
 mongoose
-  .connect("mongodb://127.0.0.1:27017/project-build-dream", {
+  .connect(process.env.MONGOOSE_LINK, {
     useNewUrlParser: true,
   })
   .then(() => {
-    console.log("database connected");
+    console.log("MONGODB CONNECTED");
   })
   .catch((err) => {
     console.log(err);
@@ -40,16 +42,16 @@ app.use("/admin", adminRouter);
 
 app.use("/uploads", express.static("./uploads"));
 
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 4001;
 
 const server = app.listen(PORT, () => {
-  console.log(`Server listening on ${PORT}`);
+  console.log(`SERVER RUNNING ON ${PORT}`);
 });
 
 const io = require("socket.io")(server, {
   pingTimeout: 60000,
   cors: {
-    origin: "http://localhost:3000",
+    origin: process.env.ORIGIN,
   },
 });
 

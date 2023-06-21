@@ -86,15 +86,20 @@ exports.Login = async (req, res) => {
     };
 
     const user = await User.findOne({ mobile: mobileNumber });
-    const professional = await Professional.findOne({ mobile: mobileNumber });
-    const shop = await Shop.findOne({ mobile: mobileNumber });
     if (!user) {
       userLOGIN.message = "Your mobile number is wrong";
       res.send({ userLOGIN });
       return;
     }
 
+       
+
     if (user) {
+      if (user.block) {
+        userLOGIN.message = "Your are blocked by admin";
+        res.send({ userLOGIN });
+        return;
+      }
       const isMatch = await bcrypt.compare(password, user.password);
 
       if (isMatch) {

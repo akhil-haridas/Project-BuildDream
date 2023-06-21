@@ -10,10 +10,8 @@ const asyncHandler = require("express-async-handler");
 const { v4: uuidv4 } = require("uuid");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
-const twilio = require("twilio");
-const stripe = require("stripe")(
-  "sk_test_51NGJfDSFVO01dJRlhSsvRF5igbmSH8UZtGIpFmUnYMliDhK2cPGyn3l6qofCIxPNmbhDwC4vvAuU57lFJtqu3UGC00H8jnNMtb"
-);
+require("dotenv").config();
+const stripe = require("stripe")(process.env.STRIPE_KEY);
 
 //Secure Password
 const securePassword = async (password) => {
@@ -136,7 +134,6 @@ exports.verifyEmail = async (req, res) => {
 exports.Login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    console.log(email, password);
     const userLOGIN = {
       status: false,
       message: null,
@@ -156,15 +153,21 @@ exports.Login = async (req, res) => {
       return;
     }
 
-    if (!professional[0].verified) {
+    if (!professional[0]?.verified) {
       userLOGIN.message =
         "Your Email  is not verified ,please verify your mail";
       res.send({ userLOGIN });
       return;
     }
-
+    
     if (professional) {
-      if (!professional[0].status) {
+      if (professional[0]?.block) {
+        userLOGIN.message = "Your are blocked by admin";
+        res.send({ userLOGIN });
+        return;
+      }
+
+      if (!professional[0]?.status) {
         userLOGIN.message = "Your account is not approved,wait please!";
         res.send({ userLOGIN });
         return;
@@ -263,7 +266,7 @@ exports.processPayment = async (req, res) => {
 
     const parsedAmount = parseInt(amount);
     let planName
-    const planValue = (parsedAmount / 100).toString(); // Convert amount to string and divide by 100
+    const planValue = (parsedAmount / 100).toString();
     const paymentIntent = await stripe.paymentIntents.create({
       amount: parsedAmount,
       currency,
@@ -279,15 +282,12 @@ exports.processPayment = async (req, res) => {
       let expiryDate = new Date(currentDate);
 
       if (planValue === "49") {
-        // 49 plan for 1 month
         expiryDate.setMonth(expiryDate.getMonth() + 1);
         planName = "BASIC"
       } else if (planValue === "99") {
-        // 99 plan for 2 months
         expiryDate.setMonth(expiryDate.getMonth() + 2);
         planName = "STANDARD";
       } else if (planValue === "149") {
-        // 149 plan for 3 months
         expiryDate.setMonth(expiryDate.getMonth() + 3);
         planName = "PREMIUM";
       }

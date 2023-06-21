@@ -10,11 +10,8 @@ const asyncHandler = require("express-async-handler");
 const { v4: uuidv4 } = require("uuid");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
-const twilio = require("twilio");
-
-const stripe = require("stripe")(
-  "sk_test_51NGJfDSFVO01dJRlhSsvRF5igbmSH8UZtGIpFmUnYMliDhK2cPGyn3l6qofCIxPNmbhDwC4vvAuU57lFJtqu3UGC00H8jnNMtb"
-);
+require("dotenv").config();
+const stripe = require("stripe")(process.env.STRIPE_KEY);
 
 //Secure Password
 const securePassword = async (password) => {
@@ -172,6 +169,11 @@ exports.Login = async (req, res) => {
       res.send({ userLOGIN });
       return;
     }
+        if (shop[0]?.block) {
+          userLOGIN.message = "Your are blocked by admin";
+          res.send({ userLOGIN });
+          return;
+        }
 
     const member = await Subscription.findOne({ user: shop[0]._id });
     if (member) {
