@@ -3,6 +3,7 @@ const Shop = require("../models/shopModel");
 const User = require("../models/clientModel");
 const Category = require("../models/categoryModel");
 const Subscription = require("../models/subscriptionModel");
+const Magazine = require("../models/magazinModel");
 const bcrypt = require("bcrypt");
 const Chat = require("../models/chatModel");
 const Message = require("../models/messageModel");
@@ -190,7 +191,7 @@ exports.Login = async (req, res) => {
       const isMatch = await bcrypt.compare(password, professional[0].password);
 
       if (isMatch) {
-        const token = jwt.sign({ id: professional[0]._id }, "secretCode", {
+        const token = jwt.sign({ id: professional[0]._id }, process.env.JWT_KEY, {
           expiresIn: "30d",
         });
         userLOGIN.status = true;
@@ -227,7 +228,7 @@ exports.Login = async (req, res) => {
 
 exports.addWork = async (req, res) => {
   try {
-    const jwtToken = jwt.verify(req.cookies.jwt.token, "secretCode");
+    const jwtToken = jwt.verify(req.cookies.jwt.token, process.env.JWT_KEY);
 
     const { title, description } = req.body;
     const image = req.file;
@@ -329,7 +330,7 @@ exports.getCategories = async (req, res) => {
 
 exports.getDetails = async (req, res) => {
   try {
-    const jwtToken = jwt.verify(req.cookies.jwt.token, "secretCode");
+    const jwtToken = jwt.verify(req.cookies.jwt.token, process.env.JWT_KEY);
     const DATA = await Professional.findOne({ _id: jwtToken.id });
     res.send({ DATA });
   } catch (error) {
@@ -340,7 +341,7 @@ exports.getDetails = async (req, res) => {
 exports.generalEdit = async (req, res) => {
   try {
     const { name, expertType } = req.body;
-    const jwtToken = jwt.verify(req.cookies.jwt.token, "secretCode");
+    const jwtToken = jwt.verify(req.cookies.jwt.token, process.env.JWT_KEY);
     const image = req.file;
     const proId = jwtToken.id;
 
@@ -367,7 +368,7 @@ exports.generalEdit = async (req, res) => {
 exports.infoEdit = async (req, res) => {
   try {
     const { bio, location, district, mobile } = req.body;
-    const jwtToken = jwt.verify(req.cookies.jwt.token, "secretCode");
+    const jwtToken = jwt.verify(req.cookies.jwt.token, process.env.JWT_KEY);
     const proId = jwtToken.id;
 
     const user = await Professional.findById({ _id: proId });
@@ -397,7 +398,7 @@ exports.infoEdit = async (req, res) => {
 exports.changePass = async (req, res) => {
   try {
     const { current, password } = req.body;
-    const jwtToken = jwt.verify(req.cookies.jwt.token, "secretCode");
+    const jwtToken = jwt.verify(req.cookies.jwt.token, process.env.JWT_KEY);
     const proId = jwtToken.id;
 
     const user = await Professional.findById({ _id: proId });
@@ -420,7 +421,7 @@ exports.changePass = async (req, res) => {
 exports.socialEdit = async (req, res) => {
   try {
     const { fb, twitter, insta, link } = req.body;
-    const jwtToken = jwt.verify(req.cookies.jwt.token, "secretCode");
+    const jwtToken = jwt.verify(req.cookies.jwt.token, process.env.JWT_KEY);
     const proId = jwtToken.id;
 
     const user = await Professional.findById({ _id: proId });
@@ -540,7 +541,7 @@ exports.deleteWork = async (req, res) => {
 
 exports.getPlan = async (req, res) => {
   try {
-     const jwtToken = jwt.verify(req.cookies.jwt.token, "secretCode");
+     const jwtToken = jwt.verify(req.cookies.jwt.token, process.env.JWT_KEY);
     const proId = jwtToken.id;
     
     const plan = await Subscription.findOne({ user: proId })
@@ -554,7 +555,7 @@ exports.getPlan = async (req, res) => {
 exports.getChat = asyncHandler(async (req, res) => {
   const { userId, userType } = req.body;
 
-  const jwtToken = jwt.verify(req.cookies.jwt.token, "secretCode");
+  const jwtToken = jwt.verify(req.cookies.jwt.token, process.env.JWT_KEY);
   const userID = jwtToken.id;
   if (!userId || !userType) {
     console.log("UserId or UserType param not sent with request");
@@ -614,7 +615,7 @@ exports.getChat = asyncHandler(async (req, res) => {
 
 exports.accessChat = asyncHandler(async (req, res) => {
   try {
-    const jwtToken = jwt.verify(req.cookies.jwt.token, "secretCode");
+    const jwtToken = jwt.verify(req.cookies.jwt.token, process.env.JWT_KEY);
     const userID = jwtToken.id;
     // const userID = "6489b09e829661f7c73c24f2";
     const userType = "Professional";
@@ -650,7 +651,7 @@ exports.accessChat = asyncHandler(async (req, res) => {
 
 exports.sendMessage = asyncHandler(async (req, res) => {
   const { content, chatId } = req.body;
-  const jwtToken = jwt.verify(req.cookies.jwt.token, "secretCode");
+  const jwtToken = jwt.verify(req.cookies.jwt.token, process.env.JWT_KEY);
   const userID = jwtToken.id;
  
   // const userID = "6489b09e829661f7c73c24f2";
@@ -716,3 +717,134 @@ exports.allMessages = asyncHandler(async (req, res) => {
     throw new Error(error.message);
   }
 });
+
+exports.getMagazines = async (req, res) => {
+  try {
+    const jwtToken = jwt.verify(req.cookies.jwt.token, process.env.JWT_KEY);
+    const proId = jwtToken.id;
+
+    const magazines = await Magazine.find({ user: proId });
+
+    res.status(200).json({ success: true, magazines });
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).json({ success: false, error: "Failed to retrieve magazines" });
+  }
+};
+
+
+exports.addMagazine = async (req, res) => {
+  try {
+    const jwtToken = jwt.verify(req.cookies.jwt.token, process.env.JWT_KEY);
+
+    const { title, description } = req.body;
+    const image = req.file;
+
+    const proId = jwtToken.id;
+
+    const newMagazine = new Magazine({
+      user: proId,
+      userType: "Professional",
+      title,
+      image: image.filename,
+      description,
+    });
+
+    const savedMagazine = await newMagazine.save();
+
+    res.status(200).json({ success: true, magazine: savedMagazine });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, error: "Failed to add magazine" });
+  }
+};
+
+exports.getMagazine = async (req, res) => {
+  try {
+    const id = req.query.id;
+    const magazine = await Magazine.findById(id);
+
+    if (!magazine) {
+      return res
+        .status(404)
+        .json({ success: false, error: "Magazine not found" });
+    }
+
+    res.status(200).json({ success: true, magazine });
+  } catch (error) {
+    console.log(error.message);
+    res
+      .status(500)
+      .json({ success: false, error: "Failed to retrieve magazine" });
+  }
+};
+
+
+exports.editMagazine = async (req, res) => {
+  try {
+    const id = req.query.id;
+
+    const magazine = await Magazine.findById(id);
+
+    if (!magazine) {
+      // Magazine not found
+      return res
+        .status(404)
+        .json({ success: false, error: "Magazine not found" });
+    }
+
+    if (req.body.title) {
+      magazine.title = req.body.title;
+    }
+
+    if (req.body.description) {
+      magazine.description = req.body.description;
+    }
+
+    if (req.file) {
+      magazine.image = req.file.filename;
+    }
+
+    const updatedMagazine = await magazine.save();
+
+    res.status(200).json({ success: true, magazine: updatedMagazine });
+  } catch (error) {
+    console.log(error.message);
+    res
+      .status(500)
+      .json({ success: false, error: "Failed to update magazine" });
+  }
+};
+
+
+exports.deleteMagazine = async (req, res) => {
+  try {
+    const id = req.query.id;
+
+    const deletedMagazine = await Magazine.findByIdAndDelete(id);
+
+    if (!deletedMagazine) {
+      // Magazine not found
+      return res
+        .status(404)
+        .json({ success: false, error: "Magazine not found" });
+    }
+
+        const jwtToken = jwt.verify(req.cookies.jwt.token, process.env.JWT_KEY);
+        const proId = jwtToken.id;
+
+        const magazines = await Magazine.find({ user: proId });
+    res
+      .status(200)
+      .json({
+        success: true,
+        message: "Magazine deleted successfully",
+        magazines,
+      });
+  } catch (error) {
+    console.log(error.message);
+    res
+      .status(500)
+      .json({ success: false, error: "Failed to delete magazine" });
+  }
+};

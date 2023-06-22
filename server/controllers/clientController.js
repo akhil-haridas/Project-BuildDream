@@ -3,7 +3,9 @@ const Professional = require("../models/professionalModel");
 const Shop = require("../models/shopModel");
 const Category = require("../models/categoryModel");
 const Chat = require("../models/chatModel");
+const Requirement = require("../models/requirementModel"); 
 const Message = require("../models/messageModel");
+const Magazine = require("../models/magazinModel")
 const asyncHandler = require("express-async-handler");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
@@ -483,3 +485,40 @@ exports.allMessages = asyncHandler(async (req, res) => {
     throw new Error(error.message);
   }
 });
+
+
+exports.getMagazine = async (req, res) => {
+  try {
+    const magazines = await Magazine.find({}).populate("user")
+    const categories = await Category.find({})
+    const requirements = await Requirement.find({ status: false }).populate("user").sort({createdAt:-1})
+    res.send({ magazines, categories, requirements })
+  } catch (error) {
+    console.log(error.message)
+  }
+}
+
+exports.addRequirement = async (req, res) => {
+  try {
+    const { category, requirement } = req.body;
+    const jwtToken = jwt.verify(req.cookies.jwt.token, "secretCode");
+    const userID = jwtToken.id;
+
+    // Create a new requirement instance
+    const newRequirement = new Requirement({
+      user: userID,
+      category: category,
+      requirement: requirement,
+    });
+
+    // Save the requirement to the database
+    const savedRequirement = await newRequirement.save();
+
+    // Respond with the saved requirement
+    res.status(200).json(savedRequirement);
+  } catch (error) {
+    console.log(error.message);
+    // Handle the error and send an appropriate response
+    res.status(500).json({ error: "Internal server error" });
+  }
+};

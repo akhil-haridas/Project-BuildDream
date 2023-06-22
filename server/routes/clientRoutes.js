@@ -63,4 +63,8 @@ router.post("/message", authJWT, clientController.sendMessage);
 
 router.get("/message?:id", authJWT, clientController.allMessages);
 
+router.get("/getmagazines", clientController.getMagazine);
+
+router.post("/addrequirement",clientController.addRequirement);
+
 module.exports = router;

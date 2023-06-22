@@ -40,6 +40,7 @@ app.use("/professional", professionalRouter);
 app.use("/shop", shopRouter);
 app.use("/admin", adminRouter);
 
+app.use("/uploads", express.static("./uploads/Professionals"));
 app.use("/uploads", express.static("./uploads"));
 
 const PORT = process.env.PORT || 4001;

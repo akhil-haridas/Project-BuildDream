@@ -6,7 +6,7 @@ const authJWT = require("../middlewares/authJWT");
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "uploads");
+    cb(null, "uploads/Professionals");
   },
   filename: function (req, file, cb) {
     cb(null, Date.now() + "-" + file.originalname);
@@ -68,5 +68,15 @@ router.get("/chat", professionalController.accessChat);
 router.post("/message", professionalController.sendMessage);
 
 router.get("/message?:id", professionalController.allMessages);
+
+router.get("/getmagazines", professionalController.getMagazines)
+
+router.post("/addmagazine", upload.single("image"), authJWT,professionalController.addMagazine);
+
+router.get("/getmagazine?:id",authJWT,professionalController.getMagazine)
+
+router.post("/editmagazine?:id", upload.single("image"), authJWT, professionalController.editMagazine)
+
+router.delete("/deletemagazine?:id",authJWT,professionalController.deleteMagazine);
 
 module.exports = router;
